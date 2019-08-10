@@ -48,6 +48,7 @@ spring:
 #        url: jdbc:mysql://demo-rds-public.cfiylxzjjqxv.us-east-2.rds.amazonaws.com:3306/jiuzhangquanzhanke?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
 #        username: GraceRen
 #        password: yzqwstt19930908R
+
         hikari:
             data-source-properties:
                 cachePrepStmts: true
