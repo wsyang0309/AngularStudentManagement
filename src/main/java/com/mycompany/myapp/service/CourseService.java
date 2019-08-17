@@ -55,16 +55,31 @@ public class CourseService {
         return courseRepository.findAllCoursesDtoWithTeacherName();
     }
 
+    public List<CourseWithTNDto> findAllCoursesById(String id) {
+        Long currId = Long.valueOf(id);
+        return courseRepository.findAllCoursesById(currId);
+    }
 
     public void registerCourse(String courseName) throws Exception{
         Optional<User> curUser = userService.getUserWithAuthorities();
         Optional<Course> curCourse = courseRepository.findCourseByCourseName(courseName);
 
         if (curUser.isPresent() && curCourse.isPresent()){
-            userCourseRepository.save(UserCourse.builder()
+            userCourseRepository.saveAndFlush(UserCourse.builder()
                 .user(curUser.get())
                 .course(curCourse.get())
                 .build());
+        } else {
+            throw new Exception("UnExpected Exception");
+        }
+    }
+
+    public void unRegisterCourse(String courseName) throws Exception {
+        Optional<User> curUser = userService.getUserWithAuthorities();
+        Optional<Course> curCourse = courseRepository.findCourseByCourseName(courseName);
+
+        if (curUser.isPresent() && curCourse.isPresent()){
+            userCourseRepository.delete((userCourseRepository.findUserCourseByUserAndCourse(curUser.get(), curCourse.get())).get());
         } else {
             throw new Exception("UnExpected Exception");
         }
@@ -80,7 +95,7 @@ public class CourseService {
         Course courseBeingSaved = Course.builder()
             .courseName(course.getCourseName())
             .courseContent(course.getCourseContent())
-            .courseLocation(course.getCourseContent())
+            .courseLocation(course.getCourseLocation())
             .teacherId(course.getTeacherId())
             .build();
 

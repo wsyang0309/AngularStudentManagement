@@ -1,8 +1,11 @@
 package com.mycompany.myapp.web.rest;
 
+import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.domain.dto.CourseDto;
+import com.mycompany.myapp.domain.dto.CourseDtoString;
 import com.mycompany.myapp.domain.dto.CourseWithTNDto;
 import com.mycompany.myapp.service.CourseService;
+import com.mycompany.myapp.service.UserService;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping
@@ -20,6 +24,9 @@ import java.util.List;
 public class CourseController {
     @Autowired
     private CourseService courseService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping(path = "/api/course/findAllCourses", produces = "application/json")
     public HttpEntity<List<CourseDto>> findAllCourses(){
@@ -36,11 +43,22 @@ public class CourseController {
         return new ResponseEntity<>(allCourses, HttpStatus.OK);
     }
 
-    @GetMapping(path = "/api/course/findAllCoursesWithTNDto", produces = "application/json")
-    public HttpEntity<List<CourseWithTNDto>> findAllCoursesWithTNDto(){
-        List<CourseWithTNDto> allCourses = courseService.findAllCoursesDtoWithTeacherNameFromDB();
+    @GetMapping(path = "/api/course/findAllCoursesWithTNDto/{id}", produces = "application/json")
+    public HttpEntity<List<CourseWithTNDto>> findAllCoursesWithTNDto(@PathVariable String id){
+        List<CourseWithTNDto> allCourses = courseService.findAllCoursesById(id);
 
         return new ResponseEntity<>(allCourses, HttpStatus.OK);
+    }
+
+    @GetMapping(path = "/api/user/findId", produces = "application/json")
+    public HttpEntity<String> findId(){
+        Optional<User> curUser = userService.getUserWithAuthorities();
+
+        if (curUser.isPresent()) {
+            return new ResponseEntity<>(String.valueOf(curUser.get().getId()), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("", HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping(path = "/api/course/registerCourse/{courseName}", produces = "application/json")
@@ -54,9 +72,16 @@ public class CourseController {
     }
 
     @PostMapping(path = "/api/course/addCourse", produces = "application/json")
-    public HttpStatus addCourse(@RequestBody @NotNull CourseDto course) {
+    public HttpStatus addCourse(@RequestBody @NotNull CourseDtoString course) {
         try {
-            courseService.addCourse(course);
+            CourseDto courseDto = CourseDto.builder()
+                .courseName(course.getCourseName())
+                .courseContent(course.getCourseContent())
+                .courseLocation(course.getCourseLocation())
+                .teacherId(Long.valueOf(course.getCourseTeacher()))
+                .build();
+
+            courseService.addCourse(courseDto);
             return HttpStatus.OK;
         } catch (Exception e) {
             return HttpStatus.BAD_REQUEST;
@@ -73,10 +98,20 @@ public class CourseController {
         }
     }
 
-    @DeleteMapping(path = "/api/course/deleteCourse/{courseName}", produces = "application/js")
+    @DeleteMapping(path = "/api/course/deleteCourse/{courseName}", produces = "application/json")
     public HttpStatus deleteCourse(@NotNull @PathVariable("courseName") String courseName) {
         try {
             courseService.deleteCourse(courseName);
+            return HttpStatus.OK;
+        } catch (Exception e) {
+            return HttpStatus.BAD_REQUEST;
+        }
+    }
+
+    @DeleteMapping(path = "/api/course/unRegisterCourse/{courseName}", produces = "application/json")
+    public HttpStatus unRegisterCourse(@NotNull @PathVariable("courseName") String courseName) {
+        try {
+            courseService.unRegisterCourse(courseName);
             return HttpStatus.OK;
         } catch (Exception e) {
             return HttpStatus.BAD_REQUEST;
