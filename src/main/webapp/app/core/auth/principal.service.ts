@@ -4,7 +4,7 @@ import { AccountService } from './account.service';
 
 @Injectable({ providedIn: 'root' })
 export class Principal {
-    private userIdentity: any;
+    public userIdentity: any;
     private authenticated = false;
     private authenticationState = new Subject<any>();
 
@@ -23,6 +23,13 @@ export class Principal {
     hasAnyAuthorityDirect(authorities: string[]): boolean {
         if (!this.authenticated || !this.userIdentity || !this.userIdentity.authorities) {
             return false;
+        }
+
+        if (authorities.length === 1) {
+            if (authorities[0] === 'ROLE_USER') {
+                if (this.userIdentity.authorities.length !== 1) return false;
+                return this.userIdentity.authorities.includes(authorities[0]);
+            }
         }
 
         for (let i = 0; i < authorities.length; i++) {
@@ -67,6 +74,7 @@ export class Principal {
             .then(response => {
                 const account = response.body;
                 if (account) {
+                    console.log(account);
                     this.userIdentity = account;
                     this.authenticated = true;
                 } else {
@@ -86,6 +94,16 @@ export class Principal {
 
     isAuthenticated(): boolean {
         return this.authenticated;
+    }
+
+    // Please realize this method
+    isTeacher(): boolean {
+        return false;
+    }
+
+    // Please realize this method
+    isStduent(): boolean {
+        return false;
     }
 
     isIdentityResolved(): boolean {

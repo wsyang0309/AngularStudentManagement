@@ -16,7 +16,7 @@ import javax.persistence.*;
 public class UserCourse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false, columnDefinition = "bigint")
+    @Column(name = "id", unique = true, nullable = false, columnDefinition = "bigint")
     private long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
